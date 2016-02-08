@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/UTDallasNext2.iml" filepath="$PROJECT_DIR$/UTDallasNext2.iml" />
+      <module fileurl="file://$PROJECT_DIR$/UTDallas.iml" filepath="$PROJECT_DIR$/UTDallas.iml" />
+      <module fileurl="file://$PROJECT_DIR$/ailib/ailib.iml" filepath="$PROJECT_DIR$/ailib/ailib.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
     </modules>
   </component>

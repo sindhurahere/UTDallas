@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/padding5"
+    android:layout_gravity="center"
+    android:background="@color/white">
+
+    <TextView
+        android:id="@+id/tvResponse_homeDialog"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/padding2"
+        android:layout_gravity="center_horizontal"
+        android:textSize="@dimen/textSize_xl"
+        android:textColor="@color/blue"
+        android:textStyle="normal"
+        android:gravity="center"
+        android:text="Oh well, let me show you"
+        android:layout_marginBottom="@dimen/padding3" />
+
+    <TextView
+        android:id="@+id/tvYes_homeDialog"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="@dimen/padding3"
+        android:paddingRight="@dimen/padding3"
+        android:background="@color/blue"
+        android:text="Show me"
+        android:paddingTop="@dimen/padding2"
+        android:paddingBottom="@dimen/padding2"
+        android:gravity="center"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:textSize="@dimen/textSize_l"
+        android:layout_gravity="center_horizontal"
+        android:layout_margin="@dimen/padding3" />
+
+    <TextView
+        android:id="@+id/tvNo_homeDialog"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingLeft="@dimen/padding3"
+        android:paddingRight="@dimen/padding3"
+        android:background="@color/blue"
+        android:paddingTop="@dimen/padding2"
+        android:paddingBottom="@dimen/padding2"
+        android:text="No thanks, take me back"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:textSize="@dimen/textSize_l"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginBottom="@dimen/padding3" />
+
+</LinearLayout>

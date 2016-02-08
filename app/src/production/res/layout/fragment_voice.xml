@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/rsz_1utd_bg"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dip"
+        android:layout_weight="1">
+        <!-- Here is the list. Since we are using a ListActivity, we
+             have to call it "@android:id/list" so ListActivity will
+             find it -->
+        <ListView
+            android:id="@android:id/list"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:drawSelectorOnTop="false" />
+
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/rsz_1utd_bg"
+            android:orientation="vertical"
+            android:weightSum="3">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="1">
+
+                <TextView
+                    android:id="@+id/tvQuestion_fragmentVoice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerHorizontal="true"
+                    android:layout_margin="@dimen/padding2"
+                    android:gravity="center|top"
+                    android:padding="@dimen/padding2"
+                    android:text="So, this is the question you have asked"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/textSize_l" />
+
+                <TextView
+                    android:id="@+id/tvAnswer_fragmentVoice"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/tvQuestion_fragmentVoice"
+                    android:layout_centerHorizontal="true"
+                    android:layout_margin="@dimen/padding2"
+                    android:gravity="center|top"
+                    android:padding="@dimen/padding2"
+                    android:text="Here is the answer to your question"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/textSize_m" />
+
+                <fragment
+                    android:id="@+id/f_map"
+                    android:name="com.google.android.gms.maps.MapFragment"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_below="@+id/tvAnswer_fragmentVoice"
+                    android:layout_marginLeft="@dimen/padding3"
+                    android:layout_marginRight="@dimen/padding3" />
+
+
+            </RelativeLayout>
+
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_weight="2"
+                android:gravity="center"
+                android:padding="@dimen/padding3">
+
+                <ai.api.ui.AIButton
+                    android:id="@+id/micButton"
+                    style="@style/ApiAi.Microphone"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </FrameLayout>
+
+
+</LinearLayout>

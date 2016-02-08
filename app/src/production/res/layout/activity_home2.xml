@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:id="@+id/ll_home"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <AutoCompleteTextView
+        android:id="@+id/tvQuestion_home"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_above="@+id/micButton"
+        android:maxLines="3"
+        android:layout_weight="1"
+        android:layout_centerInParent="true"
+        style="@style/tvReg"
+        android:gravity="center"
+        android:paddingTop="@dimen/padding3"
+        android:textSize="@dimen/textSize_xl"
+
+        />
+
+    <!--    <AutoCompleteTextView
+            android:id="@+id/tvResult_home"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/tvQuestion_home"
+            android:layout_above="@+id/micButton"
+            style="@style/tvReg"
+            />-->
+
+    <ai.api.ui.AIButton
+        android:id="@+id/micButton"
+        android:layout_height="match_parent"
+        android:layout_width="match_parent"
+        android:layout_gravity="bottom"
+        style="@style/ApiAi.Microphone"
+
+        />
+
+</LinearLayout>

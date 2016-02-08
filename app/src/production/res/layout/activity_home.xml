@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/llMainHome"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:weightSum="3"
+    android:background="@drawable/utdchessboard"
+    >
+
+    <include
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        layout="@layout/header"
+        android:layout_weight="1.35"
+        />
+
+    <ScrollView
+        android:id="@+id/SVHome"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="0.55"
+        android:padding="@dimen/padding3"
+        >
+
+        <LinearLayout
+            android:id="@+id/llHome"
+            android:layout_marginTop="@dimen/padding2"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <ai.api.ui.AIButton
+        android:id="@+id/micHome"
+        android:layout_weight="1"
+        style="@style/ApiAi.Microphone"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="bottom|center" />
+
+</LinearLayout>
