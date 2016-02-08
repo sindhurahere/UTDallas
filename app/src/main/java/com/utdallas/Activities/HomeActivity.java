@@ -50,6 +50,8 @@ import cz.msebera.android.httpclient.Header;
 
 public class HomeActivity extends FragmentActivity implements AIButton.AIButtonListener {
 
+    //Test push..
+
     private final String TAG = "HomeActivity";
     private final String MAPS_DISTANCE = "maps.distance", MAPS_TRANSPORT = "maps.transport", MAPS_TIME = "maps.time", MAPS_LOCATE = "maps.locate", MAPS_WAYFINDING = "maps.wayfinding";
     private int FRAME_ID = 756565;
