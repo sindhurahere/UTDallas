@@ -87,7 +87,6 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
             }
         });
         helperClass = new HomeActivityHelper(HomeActivity.this);
-        //blurBackground();
     }
 
     //Configuring the mic
@@ -122,7 +121,7 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
     private void addTextView(String speech, SpeechType type) {
         TextView tv = new TextView(HomeActivity.this);
         if (type == SpeechType.QUESTION) {
-            speech.toUpperCase();
+            speech=speech.toUpperCase();
             tv.setTextAppearance(this, R.style.tvQuestion);
         } else if (type == SpeechType.ANSWER) {
             tv.setTextAppearance(this, R.style.tvAnswer);
@@ -146,23 +145,28 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
         }
     }
 
+    private static String action="";
+
     private void makeURL(Result result) {
         if (result.getParameters().containsKey("buildings")) {
+            action=result.getAction();
             micButton.startListening();
-        } else if (result.getParameters().containsKey("transportation")) {
+        }
+        else if (result.getParameters().containsKey("transportation")) {
             Log.d(TAG, "Transportation detail received");
             List<AIOutputContext> contexts = result.getContexts();
             for (AIOutputContext con : contexts) {
                 Map<String, JsonElement> params = con.getParameters();
                 if (params.containsKey("transportation")) {
                     Loc origin = null, destination = null;
-                    String mode = "", url = "";
+                    String mode = "";
                     Log.d(TAG, "CONTEXT NAME : " + con.getParameters().get("transportation").getAsString());
                     String transportParam = params.get("transportation").getAsString();
                     if (transportParam.equals("Walk")) mode = "walking";
                     else mode = "driving";
-                    if (params.containsKey("buildings") && params.containsKey("buildings_1") && params.get("buildings_1").getAsString().equals("")) {
+                    if ((params.containsKey("buildings") && params.containsKey("buildings_1") && params.get("buildings_1").getAsString().equals("")) || (params.containsKey("buildings") && !params.containsKey("buildings_1"))) {
                         LocationGetter locationGetter = new LocationGetter(this);
+                        Log.d(TAG, "Directions from current location");
                         origin = new Loc("Your location", new LatLng(locationGetter.getLatitude(), locationGetter.getLongitude()));
                         Building building = helperClass.buildingsMap.get(params.get("buildings").getAsString());
                         destination = new Loc(building.getName(), building.getLatLong());
@@ -172,18 +176,19 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
                         origin = new Loc(building1.getName(), building1.getLatLong());
                         destination = new Loc(building2.getName(), building2.getLatLong());
                     }
-                    url = "https://maps.googleapis.com/maps/api/directions/json?origin=" + origin.getLatlngString()
-                            + "&destination=" + destination.getLatlngString() +
-                            "&units=imperial&mode=" + mode;
-                    requestServer_maps(url, origin, destination, result.getAction());
-                    Log.d(TAG, "Url = " + url);
+                    if (destination != null) {
+                        String url = "https://maps.googleapis.com/maps/api/directions/json?origin=" + origin.getLatlngString()
+                                + "&destination=" + destination.getLatlngString() +
+                                "&units=imperial&mode=" + mode;
+                        requestServer_maps(url, origin, destination);
+                        Log.d(TAG, "Url = " + url);
+                    }
                 }
             }
-
         }
     }
 
-    private void requestServer_maps(String url, final Loc origin, final Loc destination, final String action){
+    private void requestServer_maps(String url, final Loc origin, final Loc destination) {
         AsyncHttpClient client = new AsyncHttpClient();
         final List<LatLng> waypoints = new ArrayList<>();
         waypoints.add(origin.getLatlng());
@@ -201,13 +206,11 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
                     String dist = distance.getString("text");
                     JSONObject duration = leg.getJSONObject("duration");
                     String dur = duration.getString("text");
-                    if(action.equalsIgnoreCase(MAPS_DISTANCE)) addTextView("The distance is " + dist, SpeechType.ANSWER);
-                    else if(action.equalsIgnoreCase(MAPS_TIME)) addTextView("It could take " + dur + "to get to the destination", SpeechType.ANSWER);
                     JSONArray stepsArray = leg.getJSONArray("steps");
                     for (int k = 0; k < stepsArray.length(); k++) {
                         JSONObject step = stepsArray.getJSONObject(k);
                         JSONObject endLocation = step.getJSONObject("end_location");
-                        LatLng point = new LatLng(Double.parseDouble(endLocation.getString("lat")),Double.parseDouble(endLocation.getString("lng")));
+                        LatLng point = new LatLng(Double.parseDouble(endLocation.getString("lat")), Double.parseDouble(endLocation.getString("lng")));
                         waypoints.add(point);
                     }
                     //Create a FrameLayout to hold the Map Fragment
@@ -225,9 +228,14 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
                     //  options.scrollGesturesEnabled(true).rotateGesturesEnabled(true).zoomGesturesEnabled(true).zoomControlsEnabled(true);
                     MyMapFragment mapFragment = MyMapFragment.newInstance(waypoints, options, HomeActivity.this, origin.getName(), destination.getName());
                     getSupportFragmentManager().beginTransaction().add(frame.getId(), mapFragment).commit();
-                    String speech = "The distance between the two places is " + dist;
-                    tts.speak(speech, TextToSpeech.QUEUE_FLUSH, null);
-                    Toast.makeText(HomeActivity.this, "Distance is : " + dist, Toast.LENGTH_SHORT).show();
+                    String speech="";
+                    if(action.equalsIgnoreCase(MAPS_DISTANCE))
+                        speech = "The distance between the two places is " + dist;
+                    else if(action.equalsIgnoreCase(MAPS_WAYFINDING))
+                        speech="This is how you can get to your destination.";
+                    else if(action.equalsIgnoreCase(MAPS_TIME))
+                        speech="It takes " + duration + " to get to the destination";
+                    addTextView(speech, SpeechType.ANSWER);
                 } catch (Exception e) {
                     Log.d(TAG, "Exception parsing directions response");
                     e.printStackTrace();
@@ -241,59 +249,12 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
         });
     }
 
-   /* private void requestServer_maps(String url, final Loc origin, final Loc destination) {
-        AsyncHttpClient client = new AsyncHttpClient();
-        client.get(url, new AsyncHttpResponseHandler() {
-            @Override
-            public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                String response = new String(bytes);
-                try {
-                    final JSONObject obj = new JSONObject(response);
-                    JSONArray rowArray = obj.getJSONArray("rows");
-                    JSONObject rowObject = rowArray.getJSONObject(0);
-                    JSONArray elementsArray = rowObject.getJSONArray("elements");
-                    JSONObject elementsObj = elementsArray.getJSONObject(0);
-                    final String distance = elementsObj.getJSONObject("distance").getString("text");
-                    Log.d(TAG, "Distance is : " + distance);
-                    addTextView("The distance is " + distance, SpeechType.ANSWER);
-
-                    final ArrayList<Loc> locations = new ArrayList<Loc>();
-                    locations.add(origin);
-                    locations.add(destination);
-
-                    //Create a FrameLayout to hold the Map Fragment
-                    final FrameLayout frame = new FrameLayout(HomeActivity.this);
-                    frame.setId(675765);
-                    ll_home.addView(frame, ViewGroup.LayoutParams.MATCH_PARENT, 700);
-                    GoogleMapOptions options = new GoogleMapOptions();
-                  //  options.scrollGesturesEnabled(true).rotateGesturesEnabled(true).zoomGesturesEnabled(true).zoomControlsEnabled(true);
-                    MyMapFragment mapFragment = MyMapFragment.newInstance(locations, options, HomeActivity.this);
-                    getSupportFragmentManager().beginTransaction().add(frame.getId(), mapFragment).commit();
-                    String speech = "The distance between the two places is " + distance;
-                    tts.speak(speech, TextToSpeech.QUEUE_FLUSH, null);
-                    Toast.makeText(HomeActivity.this, "Distance is : " + distance, Toast.LENGTH_SHORT).show();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
-
-            }
-        });
-    }*/
-
 
     //Pause mic when activity pauses
     @Override
     protected void onPause() {
         super.onPause();
         micButton.pause();
-        /*if (tts != null) {
-            tts.stop();
-            tts.shutdown();
-        }*/
     }
 
     //Resume mic when activity resumes
@@ -326,9 +287,4 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
         });
     }
 
-    private void blurBackground() {
-        Bitmap bgimage = BitmapFactory.decodeResource(getResources(), R.drawable.utdchessboard);
-        Bitmap blurredBitmap = BlurImage.blur(this, bgimage);
-        ll_main.setBackgroundDrawable(new BitmapDrawable(getResources(), blurredBitmap));
-    }
 }
