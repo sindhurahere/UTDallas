@@ -1,0 +1,13 @@
+fatal: bad config file line 1 in H:\/.gitconfig
+fatal: bad config file line 1 in H:\/.gitconfig
+    while executing
+"close $fd"
+    (procedure "git" line 5)
+    invoked from within
+"git mktree << {}"
+    (procedure "PARENT" line 9)
+    invoked from within
+"PARENT"
+    (procedure "rescan_stage2" line 30)
+    invoked from within
+"rescan_stage2 file29df020 ui_ready"
