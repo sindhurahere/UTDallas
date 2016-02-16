@@ -1,11 +1,16 @@
 package com.utdallas.Activities;
 
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
+import android.Manifest;
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -19,12 +24,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.JsonElement;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
+import com.utdallas.Models.Building;
 import com.utdallas.Models.Loc;
-import com.utdallas.OldClasses.Models.Building;
-import com.utdallas.OldClasses.Utilities.HomeActivityHelper;
-import com.utdallas.OldClasses.Utilities.LocationGetter;
 import com.utdallas.R;
-import com.utdallas.Utilities.BlurImage;
+import com.utdallas.Utilities.HomeActivityHelper;
+import com.utdallas.Utilities.LocationGetter;
 import com.utdallas.Utilities.MyMapFragment;
 
 import org.json.JSONArray;
@@ -48,9 +52,7 @@ import cz.msebera.android.httpclient.Header;
  */
 
 
-public class HomeActivity extends FragmentActivity implements AIButton.AIButtonListener {
-
-    //Test push..
+public class HomeActivity extends FragmentActivity implements AIButton.AIButtonListener, LocationGetter.CurrentLocationGetter {
 
     private final String TAG = "HomeActivity";
     private final String MAPS_DISTANCE = "maps.distance", MAPS_TRANSPORT = "maps.transport", MAPS_TIME = "maps.time", MAPS_LOCATE = "maps.locate", MAPS_WAYFINDING = "maps.wayfinding";
@@ -62,7 +64,17 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
     LinearLayout ll_home, ll_main;
     ScrollView sv_home;
     AIButton micButton;
+    LocationGetter locGetter;
+    LatLng currentLocation;
+    Loc origin = null, destination = null;
+    String mode = null;
 
+
+    private final int AUDIO_REQUEST_CODE = 111;
+    private final int COARSE_LOCATION_CODE = 222;
+    private final int FINE_LOCATION_CODE = 333;
+
+    private boolean requestedLocation = false, requestedMicrophone = true;
     private enum SpeechType {
         QUESTION, ANSWER
     }
@@ -76,6 +88,7 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
         ll_main = (LinearLayout) findViewById(R.id.llMainHome);
         sv_home = (ScrollView) findViewById(R.id.SVHome);
         micButton = (AIButton) findViewById(R.id.micHome);
+        requestMicrophonePermission();
         configureMic(micButton);
 
         tts = new TextToSpeech(HomeActivity.this, new TextToSpeech.OnInitListener() {
@@ -121,7 +134,7 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
     private void addTextView(String speech, SpeechType type) {
         TextView tv = new TextView(HomeActivity.this);
         if (type == SpeechType.QUESTION) {
-            speech=speech.toUpperCase();
+            speech = speech.toUpperCase();
             tv.setTextAppearance(this, R.style.tvQuestion);
         } else if (type == SpeechType.ANSWER) {
             tv.setTextAppearance(this, R.style.tvAnswer);
@@ -145,29 +158,24 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
         }
     }
 
-    private static String action="";
+    private static String action = "";
 
     private void makeURL(Result result) {
-        if (result.getParameters().containsKey("buildings")) {
-            action=result.getAction();
-            micButton.startListening();
-        }
-        else if (result.getParameters().containsKey("transportation")) {
+        Log.d(TAG, "makeURL");
+        if (result.getParameters().containsKey("transportation")) {
             Log.d(TAG, "Transportation detail received");
             List<AIOutputContext> contexts = result.getContexts();
             for (AIOutputContext con : contexts) {
-                Map<String, JsonElement> params = con.getParameters();
+                final Map<String, JsonElement> params = con.getParameters();
                 if (params.containsKey("transportation")) {
-                    Loc origin = null, destination = null;
-                    String mode = "";
                     Log.d(TAG, "CONTEXT NAME : " + con.getParameters().get("transportation").getAsString());
                     String transportParam = params.get("transportation").getAsString();
                     if (transportParam.equals("Walk")) mode = "walking";
                     else mode = "driving";
                     if ((params.containsKey("buildings") && params.containsKey("buildings_1") && params.get("buildings_1").getAsString().equals("")) || (params.containsKey("buildings") && !params.containsKey("buildings_1"))) {
-                        LocationGetter locationGetter = new LocationGetter(this);
+                        locGetter = new LocationGetter(this, this);
+                        requestedLocation = true;
                         Log.d(TAG, "Directions from current location");
-                        origin = new Loc("Your location", new LatLng(locationGetter.getLatitude(), locationGetter.getLongitude()));
                         Building building = helperClass.buildingsMap.get(params.get("buildings").getAsString());
                         destination = new Loc(building.getName(), building.getLatLong());
                     } else if (params.containsKey("buildings") && params.containsKey("buildings_1") && !params.get("buildings_1").getAsString().equalsIgnoreCase("")) {
@@ -175,16 +183,28 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
                         Building building2 = helperClass.buildingsMap.get(params.get("buildings_1").getAsString());
                         origin = new Loc(building1.getName(), building1.getLatLong());
                         destination = new Loc(building2.getName(), building2.getLatLong());
-                    }
-                    if (destination != null) {
-                        String url = "https://maps.googleapis.com/maps/api/directions/json?origin=" + origin.getLatlngString()
-                                + "&destination=" + destination.getLatlngString() +
-                                "&units=imperial&mode=" + mode;
-                        requestServer_maps(url, origin, destination);
-                        Log.d(TAG, "Url = " + url);
+                        buildUrl(origin, destination, mode);
                     }
                 }
             }
+        } else if (result.getParameters().containsKey("buildings")) {
+            action = result.getAction();
+            micButton.startListening();
+        }
+    }
+
+    private void getOriginFromCurrentLocation(LatLng currentLoc) {
+        buildUrl(new Loc("Your location", currentLoc), destination, mode);
+        if(locGetter!=null) locGetter.stopLocationUpdates();
+    }
+
+    private void buildUrl(Loc origin, Loc destination, String mode) {
+        if (origin != null && destination != null) {
+            String url = "https://maps.googleapis.com/maps/api/directions/json?origin=" + origin.getLatlngString()
+                    + "&destination=" + destination.getLatlngString() +
+                    "&units=imperial&mode=" + mode;
+            requestServer_maps(url, origin, destination);
+            Log.d(TAG, "Url = " + url);
         }
     }
 
@@ -228,13 +248,13 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
                     //  options.scrollGesturesEnabled(true).rotateGesturesEnabled(true).zoomGesturesEnabled(true).zoomControlsEnabled(true);
                     MyMapFragment mapFragment = MyMapFragment.newInstance(waypoints, options, HomeActivity.this, origin.getName(), destination.getName());
                     getSupportFragmentManager().beginTransaction().add(frame.getId(), mapFragment).commit();
-                    String speech="";
-                    if(action.equalsIgnoreCase(MAPS_DISTANCE))
+                    String speech = "";
+                    if (action.equalsIgnoreCase(MAPS_DISTANCE))
                         speech = "The distance between the two places is " + dist;
-                    else if(action.equalsIgnoreCase(MAPS_WAYFINDING))
-                        speech="This is how you can get to your destination.";
-                    else if(action.equalsIgnoreCase(MAPS_TIME))
-                        speech="It takes " + duration + " to get to the destination";
+                    else if (action.equalsIgnoreCase(MAPS_WAYFINDING))
+                        speech = "This is how you can get to your destination.";
+                    else if (action.equalsIgnoreCase(MAPS_TIME))
+                        speech = "It takes " + dur + " to get to the destination";
                     addTextView(speech, SpeechType.ANSWER);
                 } catch (Exception e) {
                     Log.d(TAG, "Exception parsing directions response");
@@ -244,7 +264,7 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
 
             @Override
             public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
-
+                Log.d(TAG, "Failed to retrieve directions");
             }
         });
     }
@@ -255,13 +275,17 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
     protected void onPause() {
         super.onPause();
         micButton.pause();
+//        if (locGetter != null && locGetter.mGoogleApiClient.isConnected()) locGetter.stopLocationUpdates();
     }
 
-    //Resume mic when activity resumes
+    //Resume mic when activity resumes. Action to be performed after coming back from Settings screen-after GPS is enabled.
     @Override
     protected void onResume() {
         super.onResume();
         micButton.resume();
+        if (locGetter != null && locGetter.mGoogleApiClient != null && locGetter.mGoogleApiClient.isConnected() && !locGetter.mRequestingLocationUpdates) {
+            locGetter.startLocationUpdates();
+        }
     }
 
     //In case of error, log it and let the user know
@@ -287,4 +311,99 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
         });
     }
 
+    //Callback after request for permissions is made
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        Log.d(TAG, "Request permissions call back");
+        switch (requestCode) {
+            case AUDIO_REQUEST_CODE: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "Microphone permission granted");
+                } else {
+                    Toast.makeText(this, "Please allow microphone in Settings", Toast.LENGTH_SHORT).show();
+                    if (requestedMicrophone) {
+                        requestMicrophonePermission();
+                        requestedMicrophone = false;
+                    }
+                }
+                return;
+            }
+            case COARSE_LOCATION_CODE: {
+                Log.d(TAG, "Request callback - location");
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "Coarse location Permission granted");
+                } else {
+                    Toast.makeText(this, "Please enable location in Settings", Toast.LENGTH_SHORT).show();
+                }
+            }
+            break;
+            case FINE_LOCATION_CODE:
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d(TAG, "Coarse location Permission granted");
+                    if(locGetter.mGoogleApiClient.isConnected()) locGetter.startLocationUpdates();
+                    else locGetter.mGoogleApiClient.connect();
+                } else {
+                    Toast.makeText(this, "Please enable location in Settings", Toast.LENGTH_SHORT).show();
+                }
+        }
+    }
+
+    protected void onStart() {
+        super.onStart();
+    }
+
+    protected void onStop() {
+        if (locGetter != null && locGetter.mGoogleApiClient != null)
+            locGetter.mGoogleApiClient.disconnect();
+        super.onStop();
+    }
+
+    private void requestMicrophonePermission() {
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.READ_CONTACTS)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.READ_CONTACTS)) {
+            } else {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.RECORD_AUDIO},
+                        AUDIO_REQUEST_CODE);
+            }
+        }
+    }
+
+
+    private final int LOCATION_INTENT_CODE = 444;
+
+    @Override
+    public void getLatLong(LatLng currentLoc) {
+        currentLocation = currentLoc;
+        Log.d(TAG, "Current location set");
+        if(requestedLocation){
+            getOriginFromCurrentLocation(currentLocation);
+            requestedLocation = false;
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == LOCATION_INTENT_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                locGetter.mGoogleApiClient.connect();
+                Log.d(TAG, "GPS result ok");
+            } else if (resultCode == Activity.RESULT_CANCELED) {
+                Log.d(TAG, "GPS result cancelled");
+                if (((LocationManager) getSystemService(Context.LOCATION_SERVICE))
+                        .isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                    locGetter.mGoogleApiClient.connect();
+                }
+            }
+        }
+    }
 }

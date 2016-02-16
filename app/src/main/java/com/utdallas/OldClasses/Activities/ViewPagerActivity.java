@@ -1,3 +1,4 @@
+/*
 package com.utdallas.OldClasses.Activities;
 
 import android.os.Bundle;
@@ -7,9 +8,11 @@ import com.utdallas.OldClasses.Adapters.ViewPagerAdapter;
 import com.utdallas.R;
 import com.utdallas.OldClasses.Utilities.VerticalViewPager;
 
+*/
 /**
  * Created by sxk159231 on 1/22/2016.
- */
+ *//*
+
 public class ViewPagerActivity extends FragmentActivity {
 
     static final int NUM_ITEMS = 10;
@@ -31,6 +34,7 @@ public class ViewPagerActivity extends FragmentActivity {
         mPager.setAdapter(mAdapter);
 
         // Watch for button clicks.
+*/
 /*        Button button = (Button)findViewById(R.id.goto_first);
         button.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -42,6 +46,8 @@ public class ViewPagerActivity extends FragmentActivity {
             public void onClick(View v) {
                 mPager.setCurrentItem(NUM_ITEMS-1);
             }
-        });*/
+        });*//*
+
     }
 }
+*/

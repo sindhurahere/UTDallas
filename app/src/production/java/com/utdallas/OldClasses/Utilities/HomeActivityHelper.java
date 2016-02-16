@@ -17,7 +17,7 @@ import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
 import com.utdallas.OldClasses.HelperClasses.MapsActivity;
-import com.utdallas.OldClasses.Models.Building;
+import com.utdallas.Models.Building;
 import com.utdallas.R;
 
 import org.json.JSONArray;

@@ -1,6 +1,11 @@
 apply plugin: 'com.android.application'
 
 android {
+    compileOptions {
+        encoding "UTF-8"
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
+    }
     compileSdkVersion 23
     buildToolsVersion "23.0.2"
     useLibrary 'org.apache.http.legacy'
@@ -11,13 +16,16 @@ android {
         versionCode 1
         versionName "1.0"
         multiDexEnabled true
-
     }
     android.applicationVariants.all { variant ->
         if (variant.flavorName == 'testing') {
             variant.outputs[0].processResources.manifestFile = file("src/${variant.flavorName}/AndroidManifest.xml")
             variant.outputs[0].processManifest.enabled = false
         }
+    }
+    dexOptions {
+        incremental true
+        javaMaxHeapSize "4g"
     }
     buildTypes {
         release {
@@ -28,7 +36,7 @@ android {
     productFlavors {
         TestingConfig {
             minSdkVersion 15
-            multiDexEnabled true
+           // multiDexEnabled true
         }
     }
 
@@ -38,16 +46,13 @@ dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     testCompile 'junit:junit:4.12'
     compile project(':ailib')
-    compile files('libs/android-async-http-1.4.9.jar')
-    compile files('libs/MobileTestingExtension.jar')
 
-    compile 'com.google.android.gms:play-services:8.4.0'
+
     compile 'com.google.android.gms:play-services:8.4.0'
     compile 'com.android.support:appcompat-v7:23.1.1'
     compile 'com.android.support:design:23.1.1'
     compile 'cz.msebera.android:httpclient:4.4.1.1'
     compile 'com.google.maps.android:android-maps-utils:0.4+'
-    compile 'com.google.android.gms:play-services-ads:8.4.0'
     compile 'com.google.android.gms:play-services-identity:8.4.0'
     compile 'com.google.android.gms:play-services-gcm:8.4.0'
     compile 'com.google.android.gms:play-services-maps:8.4.0'

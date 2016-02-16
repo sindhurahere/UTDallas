@@ -1,4 +1,4 @@
-package com.utdallas.OldClasses.Models;
+package com.utdallas.Models;
 
 import android.util.Log;
 

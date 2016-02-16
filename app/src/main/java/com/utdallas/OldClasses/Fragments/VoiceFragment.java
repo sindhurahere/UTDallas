@@ -1,3 +1,4 @@
+/*
 package com.utdallas.OldClasses.Fragments;
 
 import android.Manifest;
@@ -33,9 +34,9 @@ import com.google.gson.JsonElement;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.utdallas.OldClasses.HelperClasses.HomeActivityHelper;
-import com.utdallas.OldClasses.Models.Building;
+import com.utdallas.Models.Building;
 import com.utdallas.R;
-import com.utdallas.OldClasses.Utilities.LocationGetter;
+import com.utdallas.Utilities.LocationGetter;
 import com.utdallas.OldClasses.Utilities.MapUtils;
 
 import org.json.JSONArray;
@@ -67,9 +68,11 @@ import ai.api.model.Result;
 import ai.api.ui.AIButton;
 import cz.msebera.android.httpclient.Header;
 
+*/
 /**
  * Created by sxk159231 on 1/25/2016.
- */
+ *//*
+
 public class VoiceFragment extends ListFragment implements AIButton.AIButtonListener {
 
     TextView tvQuestion, tvAnswer;
@@ -398,3 +401,4 @@ public class VoiceFragment extends ListFragment implements AIButton.AIButtonList
     }
 
 }
+*/

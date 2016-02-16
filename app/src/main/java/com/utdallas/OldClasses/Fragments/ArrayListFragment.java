@@ -1,3 +1,4 @@
+/*
 package com.utdallas.OldClasses.Fragments;
 
 import android.os.Bundle;
@@ -15,16 +16,20 @@ import com.utdallas.R;
 
 import java.util.ArrayList;
 
+*/
 /**
  * Created by sxk159231 on 1/25/2016.
- */
+ *//*
+
 public class ArrayListFragment extends ListFragment {
     int mNum;
 
-    /**
+    */
+/**
      * Create a new instance of CountingFragment, providing "num"
      * as an argument.
-     */
+     *//*
+
 
    static ArrayList<String> strings;
 
@@ -44,19 +49,23 @@ public class ArrayListFragment extends ListFragment {
         return f;
     }
 
-    /**
+    */
+/**
      * When creating, retrieve this instance's number from its arguments.
-     */
+     *//*
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         mNum = getArguments() != null ? getArguments().getInt("num") : 1;
     }
 
-    /**
+    */
+/**
      * The Fragment's UI is just a simple text view showing its
      * instance number.
-     */
+     *//*
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -79,3 +88,4 @@ public class ArrayListFragment extends ListFragment {
         Log.i("FragmentList", "Item clicked: " + id);
     }
 }
+*/

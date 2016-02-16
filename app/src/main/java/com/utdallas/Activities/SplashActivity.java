@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 
-import com.utdallas.OldClasses.Activities.ViewPagerActivity;
 import com.utdallas.R;
 
 public class SplashActivity extends Activity {

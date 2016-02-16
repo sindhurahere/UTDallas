@@ -16,7 +16,7 @@ import com.google.maps.android.SphericalUtil;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
-import com.utdallas.OldClasses.Models.Building;
+import com.utdallas.Models.Building;
 import com.utdallas.R;
 
 import org.json.JSONArray;
@@ -86,7 +86,7 @@ public class HomeActivityHelper {
                         building = new Building(name, id, latitude, longitude);
                         building.print();
                         // buildingsMap.put("\"" + name + "\"", building);
-                         buildingsMap.put(name, building);
+                        buildingsMap.put(name, building);
                         buildings.add(building);
                     }
                 } catch (JSONException e) {
@@ -142,6 +142,8 @@ public class HomeActivityHelper {
             }
         }
     }
+
+
 
     private String formatNumber(double distance) {
         String unit = "m";
