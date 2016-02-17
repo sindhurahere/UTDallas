@@ -56,7 +56,7 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
 
     private final String TAG = "HomeActivity";
     private final String MAPS_DISTANCE = "maps.distance", MAPS_TRANSPORT = "maps.transport", MAPS_TIME = "maps.time", MAPS_LOCATE = "maps.locate", MAPS_WAYFINDING = "maps.wayfinding";
-    private int FRAME_ID = 756565;
+    private int frameOffset=1;
 
     HomeActivityHelper helperClass;
     TextToSpeech tts;
@@ -69,12 +69,8 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
     Loc origin = null, destination = null;
     String mode = null;
 
-
-    private final int AUDIO_REQUEST_CODE = 111;
-    private final int COARSE_LOCATION_CODE = 222;
-    private final int FINE_LOCATION_CODE = 333;
-
     private boolean requestedLocation = false, requestedMicrophone = true;
+
     private enum SpeechType {
         QUESTION, ANSWER
     }
@@ -167,7 +163,7 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
             List<AIOutputContext> contexts = result.getContexts();
             for (AIOutputContext con : contexts) {
                 final Map<String, JsonElement> params = con.getParameters();
-                if (params.containsKey("transportation")) {
+                if (params.containsKey("transportation") && con.getName().equalsIgnoreCase("mode-of-transportation")) {
                     Log.d(TAG, "CONTEXT NAME : " + con.getParameters().get("transportation").getAsString());
                     String transportParam = params.get("transportation").getAsString();
                     if (transportParam.equals("Walk")) mode = "walking";
@@ -195,7 +191,7 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
 
     private void getOriginFromCurrentLocation(LatLng currentLoc) {
         buildUrl(new Loc("Your location", currentLoc), destination, mode);
-        if(locGetter!=null) locGetter.stopLocationUpdates();
+        if (locGetter != null) locGetter.stopLocationUpdates();
     }
 
     private void buildUrl(Loc origin, Loc destination, String mode) {
@@ -235,8 +231,7 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
                     }
                     //Create a FrameLayout to hold the Map Fragment
                     final FrameLayout frame = new FrameLayout(HomeActivity.this);
-                    FRAME_ID++;
-                    frame.setId(FRAME_ID);
+                    frame.setId(getResources().getInteger(R.integer.FrameID)+(frameOffset++));
                     ll_home.addView(frame, ViewGroup.LayoutParams.MATCH_PARENT, 700);
                     sv_home.post(new Runnable() {
                         @Override
@@ -315,41 +310,36 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
         Log.d(TAG, "Request permissions call back");
-        switch (requestCode) {
-            case AUDIO_REQUEST_CODE: {
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d(TAG, "Microphone permission granted");
-                } else {
-                    Toast.makeText(this, "Please allow microphone in Settings", Toast.LENGTH_SHORT).show();
-                    if (requestedMicrophone) {
-                        requestMicrophonePermission();
-                        requestedMicrophone = false;
-                    }
-                }
-                return;
-            }
-            case COARSE_LOCATION_CODE: {
-                Log.d(TAG, "Request callback - location");
-                // If request is cancelled, the result arrays are empty.
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d(TAG, "Coarse location Permission granted");
-                } else {
-                    Toast.makeText(this, "Please enable location in Settings", Toast.LENGTH_SHORT).show();
+        if (requestCode == getResources().getInteger(R.integer.RECORD_AUDIO_REQUEST_CODE)) {
+            // If request is cancelled, the result arrays are empty.
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Microphone permission granted");
+            } else {
+                Toast.makeText(this, "Please allow microphone in Settings", Toast.LENGTH_SHORT).show();
+                if (requestedMicrophone) {
+                    requestMicrophonePermission();
+                    requestedMicrophone = false;
                 }
             }
-            break;
-            case FINE_LOCATION_CODE:
-                if (grantResults.length > 0
-                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d(TAG, "Coarse location Permission granted");
-                    if(locGetter.mGoogleApiClient.isConnected()) locGetter.startLocationUpdates();
-                    else locGetter.mGoogleApiClient.connect();
-                } else {
-                    Toast.makeText(this, "Please enable location in Settings", Toast.LENGTH_SHORT).show();
-                }
+        } else if (requestCode == getResources().getInteger(R.integer.ACCESS_COURSE_LOCATION_REQUEST_CODE)) {
+            Log.d(TAG, "Request callback - location");
+            // If request is cancelled, the result arrays are empty.
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Coarse location Permission granted");
+            } else {
+                Toast.makeText(this, "Please enable location in Settings", Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == getResources().getInteger(R.integer.ACCESS_FINE_LOCATION_REQUEST_CODE)) {
+            if (grantResults.length > 0
+                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Coarse location Permission granted");
+                if (locGetter.mGoogleApiClient.isConnected()) locGetter.startLocationUpdates();
+                else locGetter.mGoogleApiClient.connect();
+            } else {
+                Toast.makeText(this, "Please enable location in Settings", Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -365,26 +355,24 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
 
     private void requestMicrophonePermission() {
         if (ContextCompat.checkSelfPermission(this,
-                Manifest.permission.READ_CONTACTS)
+                Manifest.permission.RECORD_AUDIO)
                 != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
-                    Manifest.permission.READ_CONTACTS)) {
+                    Manifest.permission.RECORD_AUDIO)) {
             } else {
                 ActivityCompat.requestPermissions(this,
                         new String[]{Manifest.permission.RECORD_AUDIO},
-                        AUDIO_REQUEST_CODE);
+                        getResources().getInteger(R.integer.RECORD_AUDIO_REQUEST_CODE));
             }
         }
     }
 
 
-    private final int LOCATION_INTENT_CODE = 444;
-
     @Override
     public void getLatLong(LatLng currentLoc) {
         currentLocation = currentLoc;
         Log.d(TAG, "Current location set");
-        if(requestedLocation){
+        if (requestedLocation) {
             getOriginFromCurrentLocation(currentLocation);
             requestedLocation = false;
         }
@@ -393,7 +381,7 @@ public class HomeActivity extends FragmentActivity implements AIButton.AIButtonL
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == LOCATION_INTENT_CODE) {
+        if (requestCode == getResources().getInteger(R.integer.LOCATION_INTENT_REQUEST_CODE)) {
             if (resultCode == Activity.RESULT_OK) {
                 locGetter.mGoogleApiClient.connect();
                 Log.d(TAG, "GPS result ok");

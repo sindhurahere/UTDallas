@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="ACCESS_COURSE_LOCATION_REQUEST_CODE">222</integer>
+    <integer name="ACCESS_FINE_LOCATION_REQUEST_CODE">333</integer>
+    <integer name="RECORD_AUDIO_REQUEST_CODE">111</integer>
+    <integer name="LOCATION_INTENT_REQUEST_CODE">444</integer>
+    <integer name="FrameID">182736</integer>
+</resources>
